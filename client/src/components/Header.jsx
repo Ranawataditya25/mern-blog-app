@@ -21,7 +21,7 @@ const Header = () => {
     <Navbar className="border-b-2">
       <Link
         to="/"
-        className="self-center whitespace-nowrap text-sm sm:text-xl font-semibold dark:text-white"
+        className="self-center whitespace-nowrap text-lg sm:text-xl font-semibold dark:text-white"
       >
         <span className="text-blue-500 px-2 py-1">Aditya's</span>
         Blog
@@ -33,13 +33,10 @@ const Header = () => {
           className="hidden lg:inline"
         />
       </form>
-      <Button className="w-12 h-10 lg:hidden" color="gray" pill>
+      <Button className="w-12 h-10 lg:hidden" color="gray" pill >
         <AiOutlineSearch />
       </Button>
       <div className="flex gap-2 md:order-2">
-        <Button className="w-12 h-10 px-4 sm:inline" color="gray" pill>
-          <FaMoon />
-        </Button>
         {currentUser ? (
           <Dropdown
             arrowIcon={false}
