@@ -49,7 +49,6 @@
 
 // export default DashSidebar;
 
-
 import {
   Sidebar,
   SidebarItem,
@@ -80,7 +79,7 @@ const DashSidebar = () => {
               icon={HiUser}
               label={"User"}
               labelColor="dark"
-              as='div'
+              as="div"
             >
               Profile
             </SidebarItem>
