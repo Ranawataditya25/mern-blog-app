@@ -13,10 +13,29 @@ import {
 import { NavLink, Link } from "react-router-dom";
 import { AiOutlineSearch } from "react-icons/ai";
 import { FaMoon } from "react-icons/fa";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
+import { signoutSuccess } from "../redux/user/userSlice";
 
 const Header = () => {
+  const dispatch = useDispatch();
   const { currentUser } = useSelector((state) => state.user);
+
+  const handleSignout = async () => {
+      try {
+        const res = await fetch('/api/user/signout', {
+          method: 'POST',
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          console.log(data.message);
+          } else {
+            dispatch(signoutSuccess());
+          }
+      } catch (error) {
+        console.log(error.message);
+      }
+    };
+
   return (
     <Navbar className="border-b-2">
       <Link
@@ -53,7 +72,7 @@ const Header = () => {
               <DropdownItem>Profile</DropdownItem>
             </Link>
             <DropdownDivider/>
-            <DropdownItem>Sign Out</DropdownItem>
+            <DropdownItem onClick={handleSignout}>Sign Out</DropdownItem>
           </Dropdown>
         ) : (
           <Link to="/sign-in">
