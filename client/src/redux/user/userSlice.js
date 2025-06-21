@@ -41,6 +41,12 @@ const userSlice = createSlice({
       state.loading = false;
       state.error = null;
     },
+    updateUserSuccess: (state, action) => {
+      // Merge the new user data with the existing data
+      state.currentUser = { ...state.currentUser, ...action.payload };
+      state.loading = false;
+      state.error = null;
+    },
   },
 });
 
@@ -52,6 +58,7 @@ export const {
   deleteUserSuccess,
   deleteUserFailure,
   signoutSuccess,
+  updateUserSuccess, // Export the new reducer action
 } = userSlice.actions;
 
 export default userSlice.reducer;

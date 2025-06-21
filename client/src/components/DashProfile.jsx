@@ -6,23 +6,26 @@ import {
   ModalHeader,
   TextInput,
 } from "flowbite-react";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import {
   deleteUserStart,
   deleteUserSuccess,
   deleteUserFailure,
-  signoutSuccess
+  signoutSuccess,
+  updateUserSuccess,
 } from "../redux/user/userSlice";
 import { HiOutlineExclamationCircle } from "react-icons/hi";
 
 const DashProfile = () => {
   const { currentUser, error } = useSelector((state) => state.user);
   const [imageFile, setImageFile] = useState(null);
-  const [imageFileUrl, setImageFileUrl] = useState(null);
+  const [imageFileUrl, setImageFileUrl] = useState(currentUser?.profilePicture || "");
   const [showModal, setShowModal] = useState(false);
   const filePickerRef = useRef();
   const dispatch = useDispatch();
+
+  // Handle image selection
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -30,14 +33,76 @@ const DashProfile = () => {
       setImageFileUrl(URL.createObjectURL(file));
     }
   };
+
+  const uploadImage = useCallback(async () => {
+    if (!imageFile) return;
+
+    const formData = new FormData();
+    formData.append("image", imageFile);
+
+    try {
+      const response = await fetch("http://localhost:3000/api/images/upload", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await response.json();
+
+      if (data.success) {
+        console.log("Uploaded image URL:", data.url);
+
+        // Update user profile picture on the server
+        const res = await fetch(`/api/user/update/${currentUser._id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ profilePicture: data.url }),
+        });
+
+        if (res.ok) {
+          const updatedUser = await res.json();
+          dispatch(updateUserSuccess(updatedUser));
+          setImageFileUrl(data.url); // Update frontend UI
+        } else {
+          console.error("Error updating user profile picture");
+        }
+      } else {
+        console.error("Image upload failed:", data.message);
+      }
+    } catch (error) {
+      console.error("Error uploading image:", error.message);
+    }
+  }, [imageFile, currentUser, dispatch]);
+
   useEffect(() => {
     if (imageFile) {
       uploadImage();
     }
-  }, [imageFile]);
+  }, [imageFile, uploadImage]);
 
-  const uploadImage = async () => {
-    console.log("uploading image...");
+  const handleUpdate = async (e) => {
+    e.preventDefault();
+
+    const updatedData = {
+      username: document.getElementById("username").value,
+      email: document.getElementById("email").value,
+    };
+
+    try {
+      const res = await fetch(`/api/user/update/${currentUser._id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updatedData),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        dispatch(updateUserSuccess(data));
+        console.log("User updated:", data);
+      } else {
+        console.error("Error updating user");
+      }
+    } catch (error) {
+      console.error("Error updating user:", error.message);
+    }
   };
 
   const handleDeleteUser = async () => {
@@ -65,21 +130,19 @@ const DashProfile = () => {
       });
       const data = await res.json();
       if (!res.ok) {
-        console.log(data.message);
-        } else {
-          dispatch(signoutSuccess());
-        }
+        console.log("Signout Error:", data.message);
+      } else {
+        dispatch(signoutSuccess());
+      }
     } catch (error) {
-      console.log(error.message);
+      console.log("Signout Error:", error.message);
     }
   };
-
-
 
   return (
     <div className="max-w-lg mx-auto p-3 w-full">
       <h1 className="my-7 text-center font-semibold text-3xl">Profile</h1>
-      <form className="flex flex-col gap-4">
+      <form className="flex flex-col gap-4" onSubmit={handleUpdate}>
         <input
           type="file"
           accept="image/*"
@@ -92,7 +155,7 @@ const DashProfile = () => {
           onClick={() => filePickerRef.current.click()}
         >
           <img
-            src={imageFileUrl || currentUser.profilePicture}
+            src={imageFileUrl}
             alt="user"
             className="rounded-full w-full h-full object-cover border-8 border-[lightgray]"
           />
@@ -101,13 +164,13 @@ const DashProfile = () => {
           type="text"
           id="username"
           placeholder="username"
-          defaultValue={currentUser.username}
+          defaultValue={currentUser?.username}
         />
         <TextInput
           type="email"
           id="email"
           placeholder="email"
-          defaultValue={currentUser.email}
+          defaultValue={currentUser?.email}
         />
         <TextInput type="password" id="password" placeholder="password" />
         <Button type="submit">Update</Button>
